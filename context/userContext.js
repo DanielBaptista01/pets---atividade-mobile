@@ -1,0 +1,41 @@
+// context/userContext.js
+import React, { createContext, useContext, useState } from 'react'; // Removido 'use' e 'useEffect' desnecessários
+import { registerUser } from '../services/petService'; // ADICIONE ESTA LINHA
+
+const userContext = createContext(undefined);
+
+export function UserProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function fetchuserRegister(name, email, password, phone, confirmpassword) {
+    try {
+      setLoading(true);
+      setError(null);
+      // Agora o JavaScript saberá o que é registerUser
+      const response = await registerUser(name, email, password, phone, confirmpassword);
+      setUser(response);
+      return response;
+    } catch (err) {
+      setError(err.message || 'Erro ao registrar usuário');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Removido o useEffect que chamava o registro vazio ao abrir o app
+
+  return (
+    <userContext.Provider value={{ user, loading, error, fetchuserRegister }}>
+      {children}
+    </userContext.Provider>
+  );
+}
+
+export function useUserRegister() {
+  const context = useContext(userContext);
+  if (!context) throw new Error('useUserRegister deve estar dentro de UserProvider');
+  return context;
+}
