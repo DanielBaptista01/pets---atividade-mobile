@@ -2,7 +2,7 @@ import React, { useState } from "react"; // Adicionado useState
 import { Alert, View, Text, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { login } from "../services/petService"; // Importe a função de login do seu service
 
-export default function LoginScreen({onLoginSuccess}) {
+export default function LoginScreen({onLoginSuccess, onGoToRegister}) {
  const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
  const [loading, setLoading] = useState(false);
@@ -12,6 +12,7 @@ export default function LoginScreen({onLoginSuccess}) {
         Alert.alert("Aviso", "Preencha e-mail e senha");
         return;
     }
+
 
     try {
         setLoading(true);
@@ -50,6 +51,10 @@ export default function LoginScreen({onLoginSuccess}) {
             <TouchableOpacity onPress={handleLogin} style={{ backgroundColor: '#007AFF', padding: 15, borderRadius: 5 }}>
                 <Text style={{ color: '#fff', fontWeight: 'bold' }}>Entrar</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity onPress={onGoToRegister} style={{ marginTop: 15 }}>
+                    <Text style={{ color: '#007AFF' }}>Não tem uma conta? Cadastre-se</Text>
+             </TouchableOpacity>
         </View>
     )
 

@@ -36,3 +36,20 @@ export async function login(email, password) {
   if (!response.ok) throw new Error(data.message || 'E-mail ou senha inválidos');
   return data;
 }
+
+export async function createPet(petData, token) {
+  const response = await fetch(`${API_URL}/pet/create`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(petData)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Erro ao criar pet');
+  }
+  return await response.json();
+}

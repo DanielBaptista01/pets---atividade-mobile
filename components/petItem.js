@@ -19,15 +19,15 @@ export function PetItem({ pet }) {
       <InfoItem label="Idade" value={`${pet.age} anos`} />
       <InfoItem label="Peso" value={`${pet.weight} kg`} />
       <InfoItem label="Cor" value={pet.color} />
-      <InfoItem label="História" value={pet.story} />
+      <InfoItem label="Características" value={pet.story} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  petCard: { backgroundColor: '#fff', padding: 20, borderRadius: 15, marginBottom: 15, elevation: 3 },
-  petName: { fontSize: 20, fontWeight: 'bold', color: '#007AFF' },
-  image: { width: '100%', height: 180, borderRadius: 10, marginBottom: 10 },
+  petCard: { backgroundColor: '#fff', padding: 20, borderRadius: 15, marginBottom: 15, marginHorizontal: 5, elevation: 3 , flex: 1, maxWidth: '48%' },
+  petName: { fontSize: 16, fontWeight: 'bold', color: '#007AFF' , resizeMode: 'cover'},
+  image: { width: '100%', height: 120, borderRadius: 10, marginBottom: 10 },
   divider: { height: 1, backgroundColor: '#EEE', marginVertical: 10 },
   infoRow: { flexDirection: 'row', marginBottom: 4 },
   label: { fontWeight: 'bold', width: 70 },

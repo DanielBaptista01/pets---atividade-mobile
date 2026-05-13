@@ -8,27 +8,31 @@ export function PetProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  
-
-  async function fetchPets() {
-    try {
-      setLoading(true);
-      const data = await getPets();
-      setPets(data);
-    } catch (err) {
-      setError(err.message || 'Erro ao carregar pets');
-    } finally {
-      setLoading(false);
-    }
+  async function loadPets() {
+    const data = await getPets();
+    setPets(data);
   }
+
+ async function fetchPets() {
+  try {
+    setLoading(true);
+    const data = await getPets();
+    console.log("LISTA ATUALIZADA - Qtd pets:", data.length); // Verifique isso no console!
+    setPets([...data]);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}
 
   
   useEffect(() => {
-    fetchPets();
-  }, []);
+  fetchPets();
+}, []);
 
   return (
-    <PetContext.Provider value={{ pets, loading, error, fetchPets }}>
+    <PetContext.Provider value={{ pets, loading, error, fetchPets, loadPets }}>
       {children}
     </PetContext.Provider>
   );
