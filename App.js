@@ -27,12 +27,13 @@ function ListaDePets() {
 
 // 2. O NOVO COMPONENTE QUE RESOLVE O SEU PROBLEMA
 function AppContent() {
-  // Agora este hook funciona porque o AppContent está dentro do UserProvider lá embaixo
   const { user, setUser } = useUserRegister(); 
   const [isRegistering, setIsRegistering] = useState(false);
   const [isCreatingPet, setIsCreatingPet] = useState(false);
+  
+  // 1. IMPORTANTE: Pegue a função fetchPets aqui no AppContent também!
+  const { fetchPets } = usePets(); 
 
-  // Se não tem usuário, mostra Login ou Cadastro
   if (!user) {
     return !isRegistering ? (
       <LoginScreen 
@@ -47,11 +48,16 @@ function AppContent() {
     );
   }
 
-  // Se tem usuário, mostra a parte principal
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
       {isCreatingPet ? (
-        <CreatePetScreen onGoBack={() => setIsCreatingPet(false)} />
+        // 2. MODIFICAÇÃO AQUI: Quando voltar, fecha a tela E atualiza a lista local!
+        <CreatePetScreen 
+          onGoBack={async () => {
+            setIsCreatingPet(false);
+            await fetchPets(); // Garante a atualização visual imediata ao retornar
+          }} 
+        />
       ) : (
         <View style={{ flex: 1 }}>
           <View style={styles.header}>
@@ -69,7 +75,6 @@ function AppContent() {
     </SafeAreaView>
   );
 }
-
 // 3. O EXPORT PRINCIPAL (Obrigatório)
 export default function App() {
   return (

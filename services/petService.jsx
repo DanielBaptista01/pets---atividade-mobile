@@ -51,17 +51,19 @@ export async function createPet(petData, token) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-
-    // LOG PARA VER O QUE ESTÁ SENDO ENVIADO
     body: JSON.stringify(petData),
   });
 
-  console.log("eRRRO ----");
-  console.log(response.json());
+  // 1. Transforma em JSON apenas uma vez
+  const data = await response.json();
+
+  // 2. Agora você pode printar o objeto real no console com segurança
+  console.log("Resposta da API:", data);
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Erro ao criar pet");
+    throw new Error(data.message || "Erro ao criar pet");
   }
-  return await response.json();
+
+  // 3. Retorna os dados já processados
+  return data;
 }

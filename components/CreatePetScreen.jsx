@@ -18,42 +18,40 @@ export function CreatePetScreen({onGoBack}) {
     const [category, setCategory] = useState('6758971d7203bce5d0315e5f');  
     const [imageUri, setImageUri] = useState(null); 
 
-    async function handleCreatePet() {
-        if(!user || !user.token) {
-            Alert.alert('Erro', 'Usuário não autenticado');
-            return;
-        }
-
-        if (!name || !age || !breed || !gender || !weight || !color || !story) {
-            Alert.alert('Erro', 'Preencha todos os campos');
-            return;
-        }
-
-        try {
-            const petData = { 
-                name, breed, gender, 
-                age: Number(age), 
-                weight: Number(weight), 
-                color, story, 
-                available: true, 
-                category 
-            };
-
-            await createPet(petData, user.token);
-            await fetchPets(); // Atualiza a lista global
-
-            
-           console.log("Forçando fechamento antes do Alerta...");
-    
-    // TESTE: Chame o onGoBack ANTES do alerta. 
-    // Se a tela fechar agora, o problema era o Alert que travava a execução.
-    onGoBack(); 
-
-    Alert.alert('Sucesso', 'Pet criado!');
-        } catch (err) {
-            Alert.alert('Erro', err.message || 'Erro ao criar pet');
-        }   
+   async function handleCreatePet() {
+    if(!user || !user.token) {
+        Alert.alert('Erro', 'Usuário não autenticado');
+        return;
     }
+
+    if (!name || !age || !breed || !gender || !weight || !color || !story) {
+        Alert.alert('Erro', 'Preencha todos os campos');
+        return;
+    }
+
+    try {
+        const petData = { 
+            name, breed, gender, 
+            age: Number(age), 
+            weight: Number(weight), 
+            color, story, 
+            available: true, 
+            category 
+        };
+
+        // 1. Envia os dados para o servidor e aguarda a criação
+        await createPet(petData, user.token);
+        
+        // 2. Atualiza o estado GLOBAL de pets no Contexto imediatamente
+        await fetchPets(); 
+
+        // 3. Fecha a tela de cadastro e volta para a lista JÁ ATUALIZADA
+        onGoBack(); 
+
+    } catch (err) {
+        Alert.alert('Erro', err.message || 'Erro ao criar pet');
+    }   
+}
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
