@@ -1,13 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native'; //
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 
-export function PetItem({ pet, onPress }) { //
+export function PetItem({ pet, onPress }) {
   return (
-    <TouchableOpacity style={styles.petCard} onPress={onPress} activeOpacity={0.8}> {/* */}
-      {/* Imagem com cantos arredondados cobrindo bem o espaço */}
+    <TouchableOpacity style={styles.petCard} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.imageContainer}>
         {pet.images?.length > 0 ? (
-          <Image source={{ uri: pet.images[0] }} style={styles.image} resizeMode="cover" /> 
+          <Image source={{ uri: pet.images[0] }} style={styles.image} resizeMode="cover" />
         ) : (
           <View style={styles.placeholderImage}>
             <Text style={styles.placeholderText}>🐾</Text>
@@ -15,12 +14,10 @@ export function PetItem({ pet, onPress }) { //
         )}
       </View>
       
-      {/* Textos minimalistas abaixo da foto */}
       <View style={styles.infoContainer}>
         <Text style={styles.petName} numberOfLines={1}>{pet.name}</Text>
         <Text style={styles.petBreed} numberOfLines={1}>{pet.breed || 'Sem raça'}</Text>
         
-        {/* Uma tag discreta com a idade */}
         <View style={styles.tag}>
           <Text style={styles.tagText}>{pet.age} {pet.age === 1 ? 'ano' : 'anos'}</Text>
         </View>
@@ -32,23 +29,18 @@ export function PetItem({ pet, onPress }) { //
 const styles = StyleSheet.create({
   petCard: { 
     backgroundColor: '#fff', 
-    borderRadius: 20, // Cantos bem arredondados como na imagem
+    borderRadius: 20, 
     marginBottom: 16, 
     marginHorizontal: 6, 
     flex: 1, 
     maxWidth: '47%', 
-    // Sombra bem suave (suavizada em relação ao elevation bruto)
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2, 
+    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)', // Ajustado para evitar o aviso de shadow da Web
     overflow: 'hidden'
   },
   imageContainer: {
     width: '100%',
     height: 130,
-    backgroundColor: '#E0F7F6', // Fundo leve verde/azul pastel
+    backgroundColor: '#E0F7F6', 
   },
   image: { 
     width: '100%', 
@@ -75,7 +67,7 @@ const styles = StyleSheet.create({
     marginBottom: 8 
   },
   tag: {
-    backgroundColor: '#E0F7F6', // Fundo azul pastel igual da imagem de ref
+    backgroundColor: '#E0F7F6', 
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -83,7 +75,7 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 11,
-    color: '#00A896', // Texto verde-água escuro contratando com o fundo
+    color: '#00A896', 
     fontWeight: 'bold'
   }
 });
