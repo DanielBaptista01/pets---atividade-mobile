@@ -1,7 +1,7 @@
 const API_URL = "https://petadopt.onrender.com";
 
 export async function login(email, password) {
-  const response = await fetch(`${API_URL}/user/login`, {
+  const response = await fetch(`${API_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password })
@@ -14,7 +14,7 @@ export async function login(email, password) {
 }
 
 export async function register(name, email, phone, password, confirmPassword) { 
-  const response = await fetch(`${BASE_URL}/user/register`, {
+  const response = await fetch(`${API_URL}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ 
