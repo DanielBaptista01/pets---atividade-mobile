@@ -34,48 +34,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 6, 
     flex: 1, 
     maxWidth: '47%', 
-    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)', // Ajustado para evitar o aviso de shadow da Web
+    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)',
     overflow: 'hidden'
   },
-  imageContainer: {
-    width: '100%',
-    height: 130,
-    backgroundColor: '#E0F7F6', 
-  },
-  image: { 
-    width: '100%', 
-    height: '100%' 
-  },
-  placeholderImage: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  imageContainer: { width: '100%', height: 130, backgroundColor: '#E0F7F6' },
+  image: { width: '100%', height: '100%' },
+  placeholderImage: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   placeholderText: { fontSize: 32 },
-  infoContainer: { 
-    padding: 12,
-  },
-  petName: { 
-    fontSize: 16, 
-    fontWeight: 'bold', 
-    color: '#1A1D1E' 
-  },
-  petBreed: { 
-    fontSize: 13, 
-    color: '#A0A7B0', 
-    marginTop: 2,
-    marginBottom: 8 
-  },
-  tag: {
-    backgroundColor: '#E0F7F6', 
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    alignSelf: 'flex-start'
-  },
-  tagText: {
-    fontSize: 11,
-    color: '#00A896', 
-    fontWeight: 'bold'
-  }
+  infoContainer: { padding: 12 },
+  petName: { fontSize: 16, fontWeight: 'bold', color: '#1A1D1E' },
+  petBreed: { fontSize: 13, color: '#A0A7B0', marginTop: 2, marginBottom: 8 },
+  tag: { backgroundColor: '#E0F7F6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start' },
+  tagText: { fontSize: 11, color: '#00A896', fontWeight: 'bold' }
 });

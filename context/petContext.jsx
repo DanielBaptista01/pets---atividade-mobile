@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getPets } from '../services/petService';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { fetchPets as getPets } from '../services/petService';
 
 const PetContext = createContext(undefined);
 
@@ -8,31 +8,25 @@ export function PetProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  async function loadPets() {
-    const data = await getPets();
-    setPets(data);
-  }
+  const fetchPets = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getPets();
+      setPets(data.pets || data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
- async function fetchPets() {
-  try {
-    setLoading(true);
-    const data = await getPets();
-    console.log("LISTA ATUALIZADA - Qtd pets:", data.length); // Verifique isso no console!
-    setPets([...data]);
-  } catch (err) {
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-}
-
-  
   useEffect(() => {
-  fetchPets();
-}, []);
+    fetchPets();
+  }, []);
 
   return (
-    <PetContext.Provider value={{ pets, loading, error, fetchPets, loadPets }}>
+    <PetContext.Provider value={{ pets, loading, error, fetchPets }}>
       {children}
     </PetContext.Provider>
   );
@@ -43,4 +37,3 @@ export function usePets() {
   if (!context) throw new Error('usePets deve estar dentro de PetProvider');
   return context;
 }
-

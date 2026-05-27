@@ -1,61 +1,55 @@
-// context/userContext.js
-import React, { createContext, useContext, useState } from 'react'; // Removido 'use' e 'useEffect' desnecessários
-import { registerUser } from '../services/petService'; // ADICIONE ESTA LINHA
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { login as apiLogin, register as apiRegister } from '../services/petService';
 
-const userContext = createContext(undefined);
+const UserContext = createContext(undefined);
 
 export function UserProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [user, setUserState] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  async function fetchuserRegister(name, email, password, phone, confirmpassword) {
-    try {
-      setLoading(true);
-      setError(null);
-      // Agora o JavaScript saberá o que é registerUser
-      const response = await registerUser(name, email, password, phone, confirmpassword);
-      setUser(response);
-      return response;
-    } catch (err) {
-      setError(err.message || 'Erro ao registrar usuário');
-      throw err;
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    const savedUser = localStorage.getItem('@PetAdopt:user');
+    if (savedUser) {
+      setUserState(JSON.parse(savedUser));
     }
-  }
-
-  async function fetchUserLogin(email, password) {
-   try {
-    setLoading(true);
-    const response = await login(email, password); // Chama o serviço de login
-    setUser(response); // SALVA O TOKEN E DADOS AQUI
-    return response;
-  } catch (err) {
-    setError(err.message);
-    throw err;
-  } finally {
     setLoading(false);
-  }
-  }
+  }, []);
 
-  // Removido o useEffect que chamava o registro vazio ao abrir o app
+  const setUser = (userData) => {
+    if (userData) {
+      localStorage.setItem('@PetAdopt:user', JSON.stringify(userData));
+      setUserState(userData);
+    } else {
+      localStorage.removeItem('@PetAdopt:user');
+      setUserState(null);
+    }
+  };
+
+  const login = async (email, password) => {
+    // Aplica o .trim() para evitar que espaços no email ou senha quebrem o login
+    return await apiLogin(email.trim(), password.trim());
+  };
+
+  // 🔒 CORREÇÃO AQUI: Remove espaços invisíveis antes de enviar para a API
+  const fetchuserRegister = async (name, email, password, phone, confirmpassword) => {
+    return await apiRegister(
+      name, 
+      email.trim(), 
+      phone.trim(), 
+      password.trim(), // <- .trim() garante que espaços extras sumam
+      confirmpassword.trim() // <- .trim() garante que espaços extras sumam
+    );
+  };
 
   return (
-    <userContext.Provider value={{ user,setUser ,loading, error, fetchuserRegister, fetchUserLogin }}>
+    <UserContext.Provider value={{ user, setUser, loading, login, fetchuserRegister }}>
       {children}
-    </userContext.Provider>
+    </UserContext.Provider>
   );
 }
 
 export function useUserRegister() {
-  const context = useContext(userContext);
+  const context = useContext(UserContext);
   if (!context) throw new Error('useUserRegister deve estar dentro de UserProvider');
-  return context;
-}
-
-export function useUserLogin() {
-  const context = useContext(userContext);
-  if (!context) throw new Error('useUserLogin deve estar dentro de UserProvider');
   return context;
 }

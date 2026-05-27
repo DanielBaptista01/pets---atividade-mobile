@@ -1,47 +1,53 @@
 const API_URL = "https://petadopt.onrender.com";
 
-export async function getPets() {
-  const response = await fetch(`${API_URL}/pet/pets`);
-  if (!response.ok) {
-    throw new Error("Erro ao buscar pets");
-  }
-  const data = await response.json();
-  return Array.isArray(data) ? data : data.pets || [];
-}
-
-export async function registerUser(
-  name,
-  email,
-  password,
-  phone,
-  confirmpassword,
-) {
-  const response = await fetch(`${API_URL}/user/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ name, email, password, phone, confirmpassword }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Erro ao registrar usuário");
-  }
-
-  return await response.json();
-}
-
 export async function login(email, password) {
   const response = await fetch(`${API_URL}/user/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password })
   });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Erro ao fazer login");
+  }
+  return await response.json();
+}
 
-  const data = await response.json();
-  if (!response.ok)
-    throw new Error(data.message || "E-mail ou senha inválidos");
-  return data;
+export async function register(name, email, phone, password, confirmPassword) { 
+  const response = await fetch(`${BASE_URL}/user/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ 
+      name, 
+      email, 
+      phone, 
+      password, 
+      confirmPassword 
+    })
+  });
+  if (!response.ok) throw new Error("Erro ao criar conta. Verifique os dados.");
+  return await response.json();
+}
+
+export async function fetchPets() {
+  const response = await fetch(`${API_URL}/pet/pets`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" }
+  });
+  if (!response.ok) throw new Error("Erro ao carregar os pets");
+  return await response.json();
+}
+
+export async function fetchMyPets(token) {
+  const response = await fetch(`${API_URL}/pet/mypets`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "authorization": token
+    }
+  });
+  if (!response.ok) throw new Error("Erro ao carregar seus pets");
+  return await response.json();
 }
 
 export async function createPet(petData, token) {
@@ -49,21 +55,25 @@ export async function createPet(petData, token) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      "authorization": token
     },
-    body: JSON.stringify(petData),
+    body: JSON.stringify(petData)
   });
-
-  // 1. Transforma em JSON apenas uma vez
-  const data = await response.json();
-
-  // 2. Agora você pode printar o objeto real no console com segurança
-  console.log("Resposta da API:", data);
-
   if (!response.ok) {
-    throw new Error(data.message || "Erro ao criar pet");
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Erro ao cadastrar pet");
   }
+  return await response.json();
+}
 
-  // 3. Retorna os dados já processados
-  return data;
+export async function deletePet(petId, token) {
+  const response = await fetch(`${API_URL}/pet/${petId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      "authorization": token
+    }
+  });
+  if (!response.ok) throw new Error("Não foi possível excluir este pet");
+  return await response.json();
 }
