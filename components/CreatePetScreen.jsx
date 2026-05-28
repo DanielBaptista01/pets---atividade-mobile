@@ -19,13 +19,21 @@ export function CreatePetScreen({onGoBack}) {
     const [imageUrl, setImageUrl] = useState(''); 
 
    async function handleCreatePet() {
-    if(!user || !user.token) {
+    if(!user) {
         Alert.alert('Erro', 'Usuário não autenticado');
         return;
     }
 
+    // Extrai o token de forma segura, seja ele direto ou vindo de dentro da propriedade 'user' do objeto retornado pela API
+    const userToken = user.token || user.user?.token;
+
+    if (!userToken) {
+        Alert.alert('Erro', 'Token de autenticação não encontrado. Faça login novamente.');
+        return;
+    }
+
     if (!name || !age || !breed || !gender || !weight || !color || !story) {
-        Alert.alert('Erro', 'Preencha todos os campos');
+        Alert.alert('Erro', 'Preencha todos os campos obrigatórios');
         return;
     }
 
@@ -40,19 +48,16 @@ export function CreatePetScreen({onGoBack}) {
             images: imageUrl ? [imageUrl] : []
         };
 
-        // 1. Envia os dados para o servidor e aguarda a criação
-        await createPet(petData, user.token);
+        // Envia usando a variável de token tratada localmente
+        await createPet(petData, userToken);
         
-        // 2. Atualiza o estado GLOBAL de pets no Contexto imediatamente
         await fetchPets(); 
-
-        // 3. Fecha a tela de cadastro e volta para a lista JÁ ATUALIZADA
         onGoBack(); 
 
     } catch (err) {
-        Alert.alert('Erro', err.message || 'Erro ao criar pet');
+        Alert.alert('Erro de Autenticação', err.message || 'Erro ao criar pet');
     }   
-}
+  }
 
    return (
     <ScrollView style={styles.container}>

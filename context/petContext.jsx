@@ -1,32 +1,15 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchPets as getPets } from '../services/petService';
+import React, { createContext, useContext, useState } from 'react';
 
 const PetContext = createContext(undefined);
 
 export function PetProvider({ children }) {
   const [pets, setPets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchPets = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getPets();
-      setPets(data.pets || data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPets();
-  }, []);
-
+  // O contexto agora apenas guarda os estados compartilhados
   return (
-    <PetContext.Provider value={{ pets, loading, error, fetchPets }}>
+    <PetContext.Provider value={{ pets, setPets, loading, setLoading, error, setError }}>
       {children}
     </PetContext.Provider>
   );
