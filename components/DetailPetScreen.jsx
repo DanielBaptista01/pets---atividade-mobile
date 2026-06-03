@@ -8,7 +8,7 @@ export function DetailPetScreen({ pet, onGoBack }) {
   const { user } = useUserRegister();
   const { fetchPets } = usePets();
 
-  // Estados para o Modal de Edição
+  // Estados originais para o Modal de Edição mantidos idênticos
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [name, setName] = useState(pet.name);
   const [breed, setBreed] = useState(pet.breed || '');
@@ -20,7 +20,9 @@ export function DetailPetScreen({ pet, onGoBack }) {
   const userToken = user?.token || user?.user?.token;
   const loggedUserId = user?._id || user?.user?._id;
   const isOwner = pet.userId === loggedUserId || pet.user?._id === loggedUserId || pet.user === loggedUserId;
+  const [loading, setLoading] = useState(false);
 
+  // Lógica original de contato mantida intacta
   const handleAdoptContact = () => {
     const phoneNumber = pet.user?.phone;
     if (!phoneNumber) {
@@ -34,29 +36,49 @@ export function DetailPetScreen({ pet, onGoBack }) {
     });
   };
 
-  const userToken = user?.token || user?.user?.token;
+  // Função mantida internamente para segurança lógica
+  const handleDelete = async () => {
+    const mensagem = "Deseja apagar este cadastro de pet permanentemente?";
 
-const handleDelete = async () => {
-  Alert.alert("Excluir Pet", "Deseja apagar este cadastro permanentemente?", [
-    { text: "Cancelar", style: "cancel" },
-    { 
-      text: "Excluir", 
-      style: "destructive", 
-      onPress: async () => {
+    if (typeof window !== 'undefined' && window.confirm) {
+      if (window.confirm(mensagem)) {
         try {
-          await deletePet(pet._id, userToken); 
-          Alert.alert("Sucesso", "Pet removido com sucesso.");
-          if (fetchPets) await fetchPets(); // Recarrega a vitrine global
-          onGoBack(); // Volta para a tela inicial
+          setLoading(true);
+          await deletePet(pet._id, userToken);
+          alert("Pet removido com sucesso.");
+          if (fetchPets) await fetchPets(); 
+          onGoBack(); 
         } catch (err) {
-          Alert.alert("Erro", err.message);
+          alert(err.message);
+        } finally {
+          setLoading(false);
         }
-      } 
+      }
+    } else {
+      Alert.alert("Excluir Pet", mensagem, [
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Excluir", 
+          style: "destructive", 
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await deletePet(pet._id, userToken); 
+              Alert.alert("Sucesso", "Pet removido com sucesso.");
+              if (fetchPets) await fetchPets();
+              onGoBack();
+            } catch (err) {
+              Alert.alert("Erro", err.message);
+            } finally {
+              setLoading(false);
+            }
+          } 
+        }
+      ]);
     }
-  ]);
-};
+  };
 
-  // 📝 FUNÇÃO DE SALVAR EDIÇÃO
+  // Lógica original de salvar alterações mantida intacta
   const handleSaveChanges = async () => {
     if (!name || !breed || !age || !weight || !color || !story) {
       Alert.alert("Erro", "Preencha todos os campos para atualizar.");
@@ -76,8 +98,8 @@ const handleDelete = async () => {
       await updatePet(pet._id, updatedData, userToken);
       Alert.alert("Sucesso", "Dados do pet atualizados com sucesso!");
       setIsEditModalOpen(false);
-      await fetchPets(); // Atualiza a lista
-      onGoBack(); // Volta para atualizar a tela
+      await fetchPets(); 
+      onGoBack(); 
     } catch (err) {
       Alert.alert("Erro", err.message);
     }
@@ -110,14 +132,12 @@ const handleDelete = async () => {
           <Text style={styles.sectionTitle}>História</Text>
           <Text style={styles.storyText}>{pet.story || 'Sem descrição.'}</Text>
 
-          {/* Botão de Contato padrão (desabilitado se for o próprio dono) */}
           {!isOwner && (
             <TouchableOpacity style={styles.adoptButton} onPress={handleAdoptContact} activeOpacity={0.8}>
               <Text style={styles.adoptButtonText}>Quero Adotar (WhatsApp)</Text>
             </TouchableOpacity>
           )}
 
-          {/* 🔐 TRAVA DE SEGURANÇA: Só mostra Editar e Excluir se o pet for SEU */}
           {isOwner && (
             <View style={styles.ownerActions}>
               <Text style={styles.ownerNotice}>⭐ Esse pet foi cadastrado por você</Text>
@@ -125,44 +145,40 @@ const handleDelete = async () => {
               <TouchableOpacity style={styles.editButton} onPress={() => setIsEditModalOpen(true)}>
                 <Text style={styles.editButtonText}>📝 Editar Informações</Text>
               </TouchableOpacity>
-
-              <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-                <Text style={styles.deleteButtonText}>🗑️ Excluir Cadastro</Text>
-              </TouchableOpacity>
             </View>
           )}
         </View>
       </ScrollView>
 
-      {/* 🏙️ MODAL DE EDIÇÃO INTEGRADO */}
+      {/* MODAL DE EDIÇÃO INTEGRADO COM SUAS PROPRIEDADES ORIGINAIS */}
       <Modal visible={isEditModalOpen} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Editar Informações do Pet</Text>
             
-            <ScrollView>
+            <ScrollView showsVerticalScrollIndicator={false}>
               <Text style={styles.inputLabel}>Nome do Pet</Text>
-              <TextInput style={styles.input} value={name} onChangeText={setName} />
+              <TextInput style={styles.input} value={name} onChangeText={setName} placeholderTextColor="#8E8E93" />
 
               <Text style={styles.inputLabel}>Raça</Text>
-              <TextInput style={styles.input} value={breed} onChangeText={setBreed} />
+              <TextInput style={styles.input} value={breed} onChangeText={setBreed} placeholderTextColor="#8E8E93" />
 
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <View style={{ width: '48%' }}>
                   <Text style={styles.inputLabel}>Idade</Text>
-                  <TextInput style={styles.input} value={age} onChangeText={setAge} keyboardType="numeric" />
+                  <TextInput style={styles.input} value={age} onChangeText={setAge} keyboardType="numeric" placeholderTextColor="#8E8E93" />
                 </View>
                 <View style={{ width: '48%' }}>
                   <Text style={styles.inputLabel}>Peso (kg)</Text>
-                  <TextInput style={styles.input} value={weight} onChangeText={setWeight} keyboardType="numeric" />
+                  <TextInput style={styles.input} value={weight} onChangeText={setWeight} keyboardType="numeric" placeholderTextColor="#8E8E93" />
                 </View>
               </View>
 
               <Text style={styles.inputLabel}>Cor</Text>
-              <TextInput style={styles.input} value={color} onChangeText={setColor} />
+              <TextInput style={styles.input} value={color} onChangeText={setColor} placeholderTextColor="#8E8E93" />
 
               <Text style={styles.inputLabel}>História/Descrição</Text>
-              <TextInput style={[styles.input, { height: 80 }]} value={story} onChangeText={setStory} multiline />
+              <TextInput style={[styles.input, { height: 90 }]} value={story} onChangeText={setStory} multiline placeholderTextColor="#8E8E93" />
 
               <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
                 <Text style={styles.saveButtonText}>Salvar Alterações</Text>
@@ -179,41 +195,40 @@ const handleDelete = async () => {
   );
 }
 
+// 🎨 ESTILIZAÇÃO COMPATÍVEL COM O SEU NOVO DESIGN SYSTEM
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF' },
+  container: { flex: 1, backgroundColor: '#FAF8F5' },
   content: { paddingBottom: 40 },
-  bigImage: { width: '100%', height: 300 },
-  noImagePlaceholder: { width: '100%', height: 300, backgroundColor: '#E0F7F6', justifyContent: 'center', alignItems: 'center' },
-  backButton: { position: 'absolute', top: 45, left: 20, backgroundColor: 'rgba(255,255,255,0.9)', paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, zIndex: 10 },
-  backButtonText: { color: '#333', fontWeight: 'bold', fontSize: 14 },
-  infoContainer: { padding: 24, marginTop: -20, backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-  petName: { fontSize: 28, fontWeight: 'bold', color: '#1A1D1E' },
-  petBreed: { fontSize: 16, color: '#A0A7B0', marginTop: 4, marginBottom: 20 },
+  bigImage: { width: '100%', height: 320 },
+  noImagePlaceholder: { width: '100%', height: 320, backgroundColor: '#E6DFD3', justifyContent: 'center', alignItems: 'center' },
+  backButton: { position: 'absolute', top: 45, left: 20, backgroundColor: 'rgba(255,255,255,0.95)', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, zIndex: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
+  backButtonText: { color: '#1A1D1E', fontWeight: 'bold', fontSize: 15 },
+  infoContainer: { padding: 24, marginTop: -24, backgroundColor: '#FFF', borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, borderColor: '#E6DFD3', shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.02, shadowRadius: 8 },
+  petName: { fontSize: 30, fontWeight: 'bold', color: '#1A1D1E', letterSpacing: -0.5 },
+  petBreed: { fontSize: 16, color: '#A37854', fontWeight: '600', marginTop: 4, marginBottom: 24 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 20 },
-  gridItem: { width: '48%', backgroundColor: '#F6FAFA', padding: 14, borderRadius: 16, marginBottom: 12 },
-  label: { fontSize: 11, color: '#A0A7B0', fontWeight: 'bold', textTransform: 'uppercase' },
-  value: { fontSize: 15, color: '#1A1D1E', fontWeight: 'bold', marginTop: 4 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1A1D1E', marginBottom: 8 },
-  storyText: { fontSize: 15, color: '#666', lineHeight: 22, marginBottom: 24 },
-  adoptButton: { backgroundColor: '#00A896', paddingVertical: 16, borderRadius: 16, alignItems: 'center' },
+  gridItem: { width: '48%', backgroundColor: '#FAF8F5', padding: 16, borderRadius: 16, marginBottom: 12, borderWidth: 1, borderColor: '#E6DFD3' },
+  label: { fontSize: 11, color: '#8E8E93', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 0.5 },
+  value: { fontSize: 16, color: '#1A1D1E', fontWeight: 'bold', marginTop: 4 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1A1D1E', marginBottom: 10, marginTop: 10 },
+  storyText: { fontSize: 15, color: '#666', lineHeight: 24, marginBottom: 28 },
+  adoptButton: { backgroundColor: '#1A1D1E', paddingVertical: 16, borderRadius: 16, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 6 },
   adoptButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
   
-  // Estilos de dono
-  ownerActions: { marginTop: 10, borderTopWidth: 1, borderTopColor: '#F0F3F3', paddingTop: 20 },
-  ownerNotice: { fontSize: 14, color: '#00A896', fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
-  editButton: { backgroundColor: '#E0F7F6', paddingVertical: 14, borderRadius: 16, alignItems: 'center', marginBottom: 12 },
-  editButtonText: { color: '#00A896', fontSize: 15, fontWeight: 'bold' },
-  deleteButton: { backgroundColor: '#FFF', borderWidth: 1.5, borderColor: '#FF4D4D', paddingVertical: 14, borderRadius: 16, alignItems: 'center' },
-  deleteButtonText: { color: '#FF4D4D', fontSize: 15, fontWeight: 'bold' },
+  // Estilos de dono adequados ao tema
+  ownerActions: { marginTop: 10, borderTopWidth: 1, borderTopColor: '#E6DFD3', paddingTop: 20 },
+  ownerNotice: { fontSize: 14, color: '#A37854', fontWeight: '700', marginBottom: 16, textAlign: 'center' },
+  editButton: { backgroundColor: '#FAF8F5', borderWidth: 1.5, borderColor: '#A37854', paddingVertical: 14, borderRadius: 16, alignItems: 'center' },
+  editButtonText: { color: '#A37854', fontSize: 15, fontWeight: 'bold' },
 
-  // Estilos do Modal de Edição
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '85%' },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#1A1D1E', marginBottom: 20, textAlign: 'center' },
-  inputLabel: { fontSize: 13, color: '#1A1D1E', fontWeight: 'bold', marginBottom: 6, marginTop: 10 },
-  input: { backgroundColor: '#F6FAFA', borderRadius: 12, padding: 12, fontSize: 15, color: '#333', borderWidth: 1, borderColor: '#E0F7F6' },
-  saveButton: { backgroundColor: '#00A896', paddingVertical: 14, borderRadius: 14, alignItems: 'center', marginTop: 24 },
+  // Estilos do Modal de Edição Premium
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(26, 29, 30, 0.6)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#FFF', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, maxHeight: '85%', borderWidth: 1, borderColor: '#E6DFD3' },
+  modalTitle: { fontSize: 22, fontWeight: 'bold', color: '#1A1D1E', marginBottom: 20, textAlign: 'center' },
+  inputLabel: { fontSize: 13, color: '#8E8E93', fontWeight: 'bold', marginBottom: 6, marginTop: 12, marginLeft: 2 },
+  input: { backgroundColor: '#FAF8F5', borderRadius: 14, padding: 14, fontSize: 15, color: '#1A1D1E', borderWidth: 1, borderColor: '#E6DFD3' },
+  saveButton: { backgroundColor: '#1A1D1E', paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginTop: 28, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
   saveButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
-  cancelButton: { paddingVertical: 14, alignItems: 'center', marginTop: 8 },
-  cancelButtonText: { color: '#A0A7B0', fontSize: 15 }
+  cancelButton: { paddingVertical: 16, alignItems: 'center', marginTop: 8 },
+  cancelButtonText: { color: '#8E8E93', fontSize: 15, fontWeight: '600' }
 });

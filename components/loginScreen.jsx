@@ -3,16 +3,15 @@ import { Alert, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Styl
 import { login } from "../services/petService"; 
 
 export default function LoginScreen({onLoginSuccess, onGoToRegister}) {
- const [email, setEmail] = useState('');
- const [password, setPassword] = useState('');
- const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
     if(!email || !password){
         Alert.alert("Aviso", "Preencha e-mail e senha");
         return;
     }
-
 
     try {
         setLoading(true);
@@ -29,44 +28,73 @@ export default function LoginScreen({onLoginSuccess, onGoToRegister}) {
     } finally {
         setLoading(false);
     }
-}
-    return(
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ fontSize: 24, marginBottom: 20 }}>Login</Text>
-            <TextInput
-                placeholder="Email"
-                value={email}
-                keyboardType="email-address"
-                onChangeText={setEmail}
-                style={{ width: '80%', padding: 10, borderWidth: 1, borderColor: '#ccc', marginBottom: 15, borderRadius: 5 }}>
-            </TextInput>
-            <TextInput
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                style={{ width: '80%', padding: 10, borderWidth: 1, borderColor: '#ccc', marginBottom: 15, borderRadius: 5 }}>
-            </TextInput>
+  }
 
-            <TouchableOpacity onPress={handleLogin} style={{ backgroundColor: '#007AFF', padding: 15, borderRadius: 5 }}>
-                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Entrar</Text>
-            </TouchableOpacity>
+  return (
+    <View style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.logoEmoji}>🐾</Text>
+        <Text style={styles.welcomeTitle}>Bem-vindo ao PetAdopt</Text>
+        <Text style={styles.welcomeSubtitle}>Encontre o seu novo melhor amigo ou gerencie suas postagens com facilidade.</Text>
+        
+        <TextInput
+          placeholder="Email"
+          placeholderTextColor="#8E8E93"
+          value={email}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          onChangeText={setEmail}
+          style={styles.input}
+        />
+        
+        <TextInput
+          placeholder="Password"
+          placeholderTextColor="#8E8E93"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          style={styles.input}
+        />
 
-        {/* Link discreto e moderno para cadastro */}
-        <TouchableOpacity onPress={onGoToRegister} style={styles.linkButton}>
-            <Text style={styles.linkButtonText}>Não tem uma conta? <Text style={styles.linkButtonBold}>Cadastre-se</Text></Text>
+        <TouchableOpacity onPress={handleLogin} style={styles.actionButton} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.actionButtonText}>Entrar</Text>
+          )}
         </TouchableOpacity>
+
+        <TouchableOpacity onPress={onGoToRegister} style={styles.linkButton}>
+          <Text style={styles.linkButtonText}>Não tem uma conta? <Text style={styles.linkButtonBold}>Cadastre-se</Text></Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
-// --- TABELA DE ESTILOS MODERNA ---
+// --- TABELA DE ESTILOS PREMIUM TOTALMENTE ATUALIZADA ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: '#FAF8F5', // Areia pastel suave para o fundo da tela inteira
     padding: 24,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  card: {
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 32,
+    width: '100%',
+    maxWidth: 440,
+    borderWidth: 1,
+    borderColor: '#E6DFD3', // Bege suave delimitando o card de login
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 3,
   },
   logoEmoji: {
     fontSize: 48,
@@ -74,40 +102,43 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   welcomeTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#1A1D1E', // Preto suave mais moderno
+    color: '#1A1D1E', // Grafite escuro moderno
     marginBottom: 8,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   welcomeSubtitle: {
-    fontSize: 15,
-    color: '#A0A7B0', // Cinza azulado da referência
-    marginBottom: 32,
+    fontSize: 14,
+    color: '#8E8E93', 
+    marginBottom: 28,
     textAlign: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
+    lineHeight: 20,
   },
   input: {
     width: '100%',
     padding: 16,
-    backgroundColor: '#F6FAFA', // Fundo pastel super leve, sem bordas escuras
-    borderRadius: 14,          // Cantos suavizados e modernos
-    marginBottom: 16,
+    backgroundColor: '#FAF8F5', // Fundo sutil combinando com a identidade visual
+    borderRadius: 14,
+    marginBottom: 14,
     fontSize: 15,
     color: '#1A1D1E',
+    borderWidth: 1,
+    borderColor: '#E6DFD3',
   },
   actionButton: {
-    backgroundColor: '#1A1D1E', // Botão escuro de destaque
+    backgroundColor: '#1A1D1E', // Destaque em contraste escuro elegante
     padding: 16,
-    borderRadius: 16,          // Formato arredondado combinando com o app
+    borderRadius: 14,
+    width: '100%',
     alignItems: 'center',
-    marginTop: 12,
-    // Efeito de elevação suave
+    marginTop: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowRadius: 4,
   },
   actionButtonText: {
     color: '#FFF',
@@ -119,11 +150,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   linkButtonText: {
-    color: '#666',
+    color: '#8E8E93',
     fontSize: 14,
   },
   linkButtonBold: {
-    color: '#00A896', // Destaque na cor verde-água principal do app
+    color: '#A37854', // Destaque na cor terracota principal do novo cabeçalho
     fontWeight: 'bold',
   },
 });
