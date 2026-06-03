@@ -34,26 +34,27 @@ export function DetailPetScreen({ pet, onGoBack }) {
     });
   };
 
-  // 🗑️ FUNÇÃO DE EXCLUIR CADASTRO
-  const handleDelete = async () => {
-    Alert.alert("Excluir Pet", "Deseja apagar este cadastro permanentemente?", [
-      { text: "Cancelar", style: "cancel" },
-      { 
-        text: "Excluir", 
-        style: "destructive", 
-        onPress: async () => {
-          try {
-            await deletePet(pet._id, userToken);
-            Alert.alert("Sucesso", "Pet removido.");
-            await fetchPets(); // Atualiza a lista global
-            onGoBack(); // Volta para a Home
-          } catch (err) {
-            Alert.alert("Erro", err.message);
-          }
-        } 
-      }
-    ]);
-  };
+  const userToken = user?.token || user?.user?.token;
+
+const handleDelete = async () => {
+  Alert.alert("Excluir Pet", "Deseja apagar este cadastro permanentemente?", [
+    { text: "Cancelar", style: "cancel" },
+    { 
+      text: "Excluir", 
+      style: "destructive", 
+      onPress: async () => {
+        try {
+          await deletePet(pet._id, userToken); 
+          Alert.alert("Sucesso", "Pet removido com sucesso.");
+          if (fetchPets) await fetchPets(); // Recarrega a vitrine global
+          onGoBack(); // Volta para a tela inicial
+        } catch (err) {
+          Alert.alert("Erro", err.message);
+        }
+      } 
+    }
+  ]);
+};
 
   // 📝 FUNÇÃO DE SALVAR EDIÇÃO
   const handleSaveChanges = async () => {

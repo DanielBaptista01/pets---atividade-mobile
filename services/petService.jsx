@@ -72,7 +72,25 @@ export async function deletePet(petId, token) {
       "authorization": cleanToken
     }
   });
+
   if (!response.ok) throw new Error("Não foi possível excluir este pet.");
+  return await response.json();
+}
+
+// 👤 FUNÇÃO PARA DELETAR CONTA DO USUÁRIO
+export async function deleteUser(userId, token) {
+  if (!token) throw new Error("Token não fornecido.");
+  const cleanToken = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+
+  const response = await fetch(`${BASE_URL}/user/${userId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      "authorization": cleanToken
+    }
+  });
+
+  if (!response.ok) throw new Error("Erro ao tentar excluir a sua conta.");
   return await response.json();
 }
 

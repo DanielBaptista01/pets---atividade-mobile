@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'; 
-import { SafeAreaView, Text, View, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView, Text, View, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Image, ScrollView, useWindowDimensions, Alert } from 'react-native';
 import { PetProvider, usePets } from './context/petContext';
 import { UserProvider, useUserRegister } from './context/userContext'; 
 import { PetItem } from './components/petItem';
@@ -7,139 +7,66 @@ import LoginScreen from './components/loginScreen';
 import { CadastroScreen } from './components/cadrastoScreen'; 
 import { CreatePetScreen } from './components/CreatePetScreen'; 
 import { DetailPetScreen } from './components/DetailPetScreen'; 
-import { fetchMyPets } from './services/petService';
+import { fetchMyPets, deleteUser } from './services/petService';
 
-// Componente utilizando a função FETCHPET que JÁ EXISTIA no teu contexto global
-// Componente de Listagem com Rodagem de Páginas Integrada
-import { fetchPets as fetchPetsAPI } from './services/petService'; // Certifique-se de que a importação está no topo do App.js
-
-function ListaDePets({ onSelectPet }) {
-  // Puxa as funções de estado do contexto global
-  const { pets, setPets, loading, setLoading, error, setError } = usePets();
-  const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    async function carregarPaginaServidor() {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Faz a chamada real com a página atual diretamente no service
-        const data = await fetchPetsAPI(page, 6);
-        const novaLista = data.pets || data;
-        
-        if (Array.isArray(novaLista)) {
-          setPets(novaLista); // Atualiza a tela limpando os pets antigos
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    carregarPaginaServidor();
-  }, [page]); // Roda sempre que a página mudar
-
-  if (loading) return <ActivityIndicator size="large" color="#00A896" style={{ marginTop: 50 }} />;
-  if (error) return <Text style={{ textAlign: 'center', color: 'red', marginTop: 20 }}>{error}</Text>;
-  
-  return (
-    <View style={{ flex: 1 }}>
-      <FlatList
-        data={pets}
-        keyExtractor={(item) => `${item._id}_page_${page}`}
-        numColumns={2}
-        key={2}
-        renderItem={({ item }) => (
-          <PetItem pet={item} onPress={() => onSelectPet(item)} />
-        )}
-        contentContainerStyle={{ padding: 15 }}
-        ListEmptyComponent={
-          <Text style={{ textAlign: 'center', color: '#666', marginTop: 40 }}>
-            Nenhum pet encontrado nesta página.
-          </Text>
-        }
-      />
-
-      {/* 🧭 CONTROLE DE RODAGEM DE PÁGINAS */}
-      <View style={styles.paginationContainer}>
-        <TouchableOpacity 
-          style={[styles.pageButton, page === 1 && styles.pageButtonDisabled]} 
-          onPress={() => setPage((p) => Math.max(p - 1, 1))}
-          disabled={page === 1}
-        >
-          <Text style={styles.pageButtonText}>◀ Voltar</Text>
-        </TouchableOpacity>
-
-        <View style={styles.pageIndicator}>
-          <Text style={styles.pageIndicatorText}>Página {page}</Text>
-        </View>
-
-        <TouchableOpacity 
-          style={[styles.pageButton, pets.length < 6 && styles.pageButtonDisabled]} 
-          onPress={() => setPage((p) => p + 1)}
-          disabled={pets.length < 6} // Trava se a página atual vier incompleta (fim dos dados)
-        >
-          <Text style={styles.pageButtonText}>Avançar ▶</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
-
-// Componente dos teus pets cadastrados
-function AbasMeusPets({ onSelectPet, user }) {
+function VitrinePets({ onSelectPet, filtroAtivo, user, isDesktop }) {
+  const { pets, loading, error, fetchPets } = usePets();
   const [meusPets, setMeusPets] = useState([]);
-  const [loadingMeus, setLoadingMeus] = useState(true);
+  const [loadingMeus, setLoadingMeus] = useState(false);
+
+  const PROFESSOR_USER_ID = "640f63b4f13e33bdeb2858fd"; 
 
   useEffect(() => {
-    async function load() {
-      try {
-        setLoadingMeus(true);
-        const userToken = user?.token || user?.user?.token;
-        
-        if (userToken) {
-          const data = await fetchMyPets(userToken);
-          if (Array.isArray(data)) {
-            setMeusPets(data);
-          } else if (data && Array.isArray(data.pets)) {
-            setMeusPets(data.pets);
-          } else {
-            setMeusPets([]);
+    async function loadMeusPets() {
+      if (filtroAtivo === 'meus') {
+        try {
+          setLoadingMeus(true);
+          const userToken = user?.token || user?.user?.token;
+          if (userToken) {
+            const data = await fetchMyPets(userToken);
+            setMeusPets(data.pets || data);
           }
+        } catch (err) {
+          console.log(err.message);
+        } finally {
+          setLoadingMeus(false);
         }
-      } catch (err) {
-        console.log("Erro ao carregar Meus Pets:", err.message);
-      } finally {
-        setLoadingMeus(false);
+      } else if (filtroAtivo === 'todos') {
+        if (fetchPets) fetchPets();
       }
     }
-    load();
-  }, [user]);
+    loadMeusPets();
+  }, [filtroAtivo, user]);
 
-  if (loadingMeus) return <ActivityIndicator size="large" color="#00A896" style={{ marginTop: 50 }} />;
+  if (loading || loadingMeus) {
+    return <ActivityIndicator size="small" color="#A37854" style={{ marginTop: 30 }} />;
+  }
 
-  if (!meusPets || meusPets.length === 0) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Text style={{ color: '#666', fontSize: 16, textAlign: 'center' }}>
-          Você ainda não cadastrou nenhum pet para adoção.
-        </Text>
-      </View>
-    );
+  let petsExibidos = [];
+  if (filtroAtivo === 'todos') {
+    petsExibidos = pets;
+  } else if (filtroAtivo === 'meus') {
+    petsExibidos = meusPets;
+  } else if (filtroAtivo === 'professor') {
+    petsExibidos = pets.filter(p => p.userId === PROFESSOR_USER_ID || p.user === PROFESSOR_USER_ID || p.user?._id === PROFESSOR_USER_ID);
   }
 
   return (
     <FlatList
-      data={meusPets}
+      data={petsExibidos}
       keyExtractor={(item) => item._id || String(Math.random())}
-      numColumns={2}
-      key={2}
+      numColumns={isDesktop ? 4 : 2}
+      key={isDesktop ? 4 : 2}
+      scrollEnabled={false} 
       renderItem={({ item }) => (
         <PetItem pet={item} onPress={() => onSelectPet(item)} />
       )}
-      contentContainerStyle={{ padding: 15 }}
+      contentContainerStyle={[styles.vitrineContainer, isDesktop && styles.vitrineDesktop]}
+      ListEmptyComponent={
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Nenhum pet cadastrado nesta categoria.</Text>
+        </View>
+      }
     />
   );
 }
@@ -149,12 +76,14 @@ function AppContent() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [isCreatingPet, setIsCreatingPet] = useState(false);
   const [currentTab, setCurrentTab] = useState('inicio');
-  const [subTabInicial, setSubTabInicial] = useState('todos'); 
+  const [filtroMural, setFiltroMural] = useState('todos'); 
   const [selectedPet, setSelectedPet] = useState(null);
-  const { fetchPets } = usePets(); 
+
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 768; 
 
   if (userLoading) {
-    return <ActivityIndicator size="large" style={{ marginTop: 100 }} />;
+    return <ActivityIndicator size="large" color="#A37854" style={{ marginTop: 100 }} />;
   }
 
   if (!user) {
@@ -170,88 +99,136 @@ function AppContent() {
   }
 
   if (isCreatingPet) {
-    return (
-      <CreatePetScreen 
-        onGoBack={async () => {
-          setIsCreatingPet(false);
-          setSubTabInicial('todos'); 
-          await fetchPets(1, 6); // Recarrega a primeira página global usando o contexto
-        }} 
-      />
-    );
+    return <CreatePetScreen onGoBack={() => { setIsCreatingPet(false); setFiltroMural('meus'); }} />;
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
-      <View style={{ flex: 1 }}>
+    <SafeAreaView style={styles.containerApp}>
+      
+      {/* NAVBAR DO TOPO */}
+      <View style={[styles.navbarSuperior, isDesktop && styles.navbarSuperiorDesktop]}>
+        <View style={styles.navBrandArea}>
+          <Text style={styles.navBrandTitle}>🐾 Pet Adopt</Text>
+          <Text style={styles.navBrandTagline}>Conexões puras, lares felizes</Text>
+        </View>
+
+        {isDesktop && (
+          <View style={styles.menuLinksDesktop}>
+            <TouchableOpacity style={styles.linkDesktopItem} onPress={() => setCurrentTab('inicio')}>
+              <Text style={[styles.linkDesktopText, currentTab === 'inicio' && styles.linkDesktopTextActive]}>Explorar Pets</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.linkDesktopItem} onPress={() => setCurrentTab('perfil')}>
+              <Text style={[styles.linkDesktopText, currentTab === 'perfil' && styles.linkDesktopTextActive]}>Minha Conta</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        
+        <TouchableOpacity onPress={() => setIsCreatingPet(true)} style={styles.navActionBtn}>
+          <Text style={styles.navActionBtnText}>Quero Doar</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: isDesktop ? 40 : 90 }}>
         
         {currentTab === 'inicio' && (
-          <View style={{ flex: 1 }}>
+          <View style={isDesktop && styles.conteudoAlinhadoDesktop}>
             
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>Pet Adopt</Text>
-              <TouchableOpacity onPress={() => setIsCreatingPet(true)} style={styles.addButton}>
-                <Text style={styles.addButtonText}>+ Novo</Text>
+            {/* HERO BANNER DO MODELO DA IMAGEM */}
+            <View style={[styles.heroBanner, isDesktop && styles.heroBannerDesktop]}>
+              <View style={styles.heroTextArea}>
+                <Text style={[styles.heroTitleText, isDesktop && styles.heroTitleTextDesktop]}>Encontre seu{"\n"}melhor amigo</Text>
+                <TouchableOpacity style={styles.heroButton} onPress={() => setFiltroMural('todos')}>
+                  <Text style={styles.heroButtonText}>Ver Pets Disponíveis</Text>
+                </TouchableOpacity>
+              </View>
+              <Image 
+                source={{ uri: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?q=80&w=600&auto=format&fit=crop' }} 
+                style={[styles.heroImage, isDesktop && styles.heroImageDesktop]} 
+              />
+            </View>
+
+            <Text style={styles.muralTitle}>Mural Pet</Text>
+
+            {/* PÍLULAS DE FILTRAGEM TRIPLA */}
+            <View style={styles.pillFilterContainer}>
+              <TouchableOpacity style={[styles.pillItem, filtroMural === 'todos' && styles.pillItemActive]} onPress={() => setFiltroMural('todos')}>
+                <Text style={[styles.pillText, filtroMural === 'todos' && styles.pillTextActive]}>Todos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.pillItem, filtroMural === 'meus' && styles.pillItemActive]} onPress={() => setFiltroMural('meus')}>
+                <Text style={[styles.pillText, filtroMural === 'meus' && styles.pillTextActive]}>Meus Pets</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.pillItem, filtroMural === 'professor' && styles.pillItemActive]} onPress={() => setFiltroMural('professor')}>
+                <Text style={[styles.pillText, filtroMural === 'professor' && styles.pillTextActive]}>Do Professor</Text>
               </TouchableOpacity>
             </View>
 
-            <View style={styles.subTabBar}>
-              <TouchableOpacity 
-                style={[styles.subTabItem, subTabInicial === 'todos' && styles.subTabItemActive]} 
-                onPress={() => setSubTabInicial('todos')}
-              >
-                <Text style={[styles.subTabText, subTabInicial === 'todos' && styles.subTabTextActive]}>
-                  Todos os Pets
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.subTabItem, subTabInicial === 'meus' && styles.subTabItemActive]} 
-                onPress={() => setSubTabInicial('meus')}
-              >
-                <Text style={[styles.subTabText, subTabInicial === 'meus' && styles.subTabTextActive]}>
-                  Meus Pets ⭐
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {subTabInicial === 'todos' ? (
-              <ListaDePets onSelectPet={(pet) => setSelectedPet(pet)} />
-            ) : (
-              <AbasMeusPets onSelectPet={(pet) => setSelectedPet(pet)} user={user} />
-            )}
-
+            <VitrinePets onSelectPet={(pet) => setSelectedPet(pet)} filtroAtivo={filtroMural} user={user} isDesktop={isDesktop} />
           </View>
         )}
 
         {currentTab === 'perfil' && (
-          <View style={{ flex: 1, backgroundColor: '#FFF' }}>
-            <View style={styles.header}><Text style={styles.headerTitle}>Minha Conta</Text></View>
-            <View style={styles.profileContainer}>
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarText}>{user.user?.name ? user.user.name[0].toUpperCase() : 'U'}</Text>
-              </View>
-              <Text style={styles.profileName}>{user.user?.name || 'Usuário'}</Text>
-              <Text style={styles.profileEmail}>{user.user?.email || user.email}</Text>
-              <View style={styles.divider} />
-              <Text style={styles.infoTitle}>Informações de Contato</Text>
-              <Text style={styles.infoBody}>Telefone: {user.user?.phone || 'Não informado'}</Text>
-              <TouchableOpacity style={styles.logoutButton} onPress={() => setUser(null)}>
-                <Text style={styles.logoutButtonText}>Sair da Conta</Text>
-              </TouchableOpacity>
+          <View style={[styles.profileWrapper, isDesktop && styles.conteudoAlinhadoDesktop]}>
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarInitial}>{user.user?.name ? user.user.name[0].toUpperCase() : 'U'}</Text>
             </View>
+            <Text style={styles.profileNameText}>{user.user?.name || 'Usuário Protetor'}</Text>
+            <Text style={styles.profileEmailText}>{user.user?.email || user.email}</Text>
+            
+            <View style={styles.dividerLine} />
+            
+            {/* SAIR DA CONTA */}
+            <TouchableOpacity style={styles.btnDangerOutline} onPress={() => setUser(null)}>
+              <Text style={styles.btnDangerOutlineText}>Sair da Conta</Text>
+            </TouchableOpacity>
+
+            {/* DELETAR CONTA PERMANENTEMENTE */}
+            <TouchableOpacity 
+              style={styles.btnDangerSolid} 
+              onPress={async () => {
+                const userToken = user?.token || user?.user?.token;
+                const userId = user?._id || user?.user?._id;
+
+                Alert.alert(
+                  "Excluir Conta Permanentemente",
+                  "Aviso: Todos os seus dados serão apagados. Deseja mesmo continuar?",
+                  [
+                    { text: "Cancelar", style: "cancel" },
+                    { 
+                      text: "Excluir Minha Conta", 
+                      style: "destructive", 
+                      onPress: async () => {
+                        try {
+                          await deleteUser(userId, userToken);
+                          Alert.alert("Conta Excluída", "Seus dados foram removidos com sucesso.");
+                          setUser(null);
+                        } catch (err) {
+                          Alert.alert("Erro", err.message);
+                        }
+                      } 
+                    }
+                  ]
+                );
+              }}
+            >
+              <Text style={styles.btnDangerSolidText}>⚠️ Excluir Minha Conta</Text>
+            </TouchableOpacity>
           </View>
         )}
-      </View>
 
-      <View style={styles.tabBar}>
-        <TouchableOpacity style={[styles.tabItem, currentTab === 'inicio' && styles.tabItemActive]} onPress={() => setCurrentTab('inicio')}>
-          <Text style={[styles.tabText, currentTab === 'inicio' && styles.tabTextActive]}>🐾 Pets</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.tabItem, currentTab === 'perfil' && styles.tabItemActive]} onPress={() => setCurrentTab('perfil')}>
-          <Text style={[styles.tabText, currentTab === 'perfil' && styles.tabTextActive]}>👤 Perfil</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
+
+      {/* MENU INFERIOR (Apenas se for celular) */}
+      {!isDesktop && (
+        <View style={styles.tabNavContainer}>
+          <TouchableOpacity style={styles.tabNavItem} onPress={() => setCurrentTab('inicio')}>
+            <Text style={[styles.tabNavText, currentTab === 'inicio' && styles.tabNavTextActive]}>🐾 Explorar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tabNavItem} onPress={() => setCurrentTab('perfil')}>
+            <Text style={[styles.tabNavText, currentTab === 'perfil' && styles.tabNavTextActive]}>👤 Perfil</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
     </SafeAreaView>
   );
 }
@@ -267,34 +244,60 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  header: { paddingTop: 50, paddingHorizontal: 24, paddingBottom: 15, backgroundColor: '#FFF', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  headerTitle: { fontSize: 26, fontWeight: 'bold', color: '#1A1D1E' },
-  addButton: { backgroundColor: '#00A896', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12 },
-  addButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
-  subTabBar: { flexDirection: 'row', backgroundColor: '#FFF', paddingHorizontal: 16, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#F0F3F3' },
-  subTabItem: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, marginHorizontal: 4, backgroundColor: '#F6FAFA' },
-  subTabItemActive: { backgroundColor: '#E0F7F6' },
-  subTabText: { fontSize: 14, color: '#A0A7B0', fontWeight: '500' },
-  subTabTextActive: { color: '#00A896', fontWeight: 'bold' },
-  tabBar: { flexDirection: 'row', height: 65, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F0F3F3', justifyContent: 'space-around', alignItems: 'center', paddingBottom: 5 },
-  tabItem: { flex: 1, alignItems: 'center', justifyContent: 'center', height: '100%' },
-  tabItemActive: { borderTopWidth: 3, borderTopColor: '#00A896' },
-  tabText: { fontSize: 12, color: '#A0A7B0', fontWeight: '500', marginTop: 2 },
-  tabTextActive: { color: '#00A896', fontWeight: 'bold' },
-  profileContainer: { alignItems: 'center', padding: 24 },
-  avatarPlaceholder: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#E0F7F6', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  avatarText: { fontSize: 32, color: '#00A896', fontWeight: 'bold' },
-  profileName: { fontSize: 22, fontWeight: 'bold', color: '#1A1D1E' },
-  profileEmail: { fontSize: 14, color: '#A0A7B0', marginTop: 4 },
-  divider: { width: '100%', height: 1, backgroundColor: '#F0F3F3', marginVertical: 24 },
-  infoTitle: { alignSelf: 'flex-start', fontSize: 16, fontWeight: 'bold', color: '#1A1D1E', marginBottom: 8 },
-  infoBody: { alignSelf: 'flex-start', fontSize: 15, color: '#666', marginBottom: 32 },
-  logoutButton: { backgroundColor: '#FFF', borderWidth: 1.5, borderColor: '#FF4D4D', paddingVertical: 14, borderRadius: 14, width: '100%', alignItems: 'center' },
-  logoutButtonText: { color: '#FF4D4D', fontSize: 15, fontWeight: 'bold' },
-  paginationContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F0F3F3' },
-  pageButton: { backgroundColor: '#E0F7F6', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10 },
-  pageButtonDisabled: { backgroundColor: '#F0F3F3', opacity: 0.5 },
-  pageButtonText: { color: '#00A896', fontWeight: 'bold', fontSize: 14 },
-  pageIndicator: { paddingVertical: 8, paddingHorizontal: 14, backgroundColor: '#F6FAFA', borderRadius: 8 },
-  pageIndicatorText: { color: '#1A1D1E', fontWeight: 'bold', fontSize: 14 }
+  containerApp: { flex: 1, backgroundColor: '#FAF9F5' },
+  
+  navbarSuperior: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 40, paddingBottom: 16, backgroundColor: '#FAF9F5' },
+  navbarSuperiorDesktop: { paddingHorizontal: 60, paddingTop: 24, borderBottomWidth: 1, borderBottomColor: '#E5E2DA' },
+  navBrandArea: { flexDirection: 'column' },
+  navBrandTitle: { fontSize: 20, fontWeight: '800', color: '#1E1F20' },
+  navBrandTagline: { fontSize: 11, color: '#8E8E93', fontWeight: '500' },
+  navActionBtn: { backgroundColor: '#A37854', paddingVertical: 10, paddingHorizontal: 18, borderRadius: 20 },
+  navActionBtnText: { color: '#FFF', fontSize: 13, fontWeight: 'bold' },
+
+  menuLinksDesktop: { flexDirection: 'row', marginLeft: 40, flex: 1 },
+  linkDesktopItem: { marginHorizontal: 16, paddingVertical: 8 },
+  linkDesktopText: { fontSize: 15, color: '#8E8E93', fontWeight: '600' },
+  linkDesktopTextActive: { color: '#A37854', fontWeight: 'bold' },
+
+  conteudoAlinhadoDesktop: { width: '100%', maxWidth: 1200, alignSelf: 'center', paddingHorizontal: 40 },
+
+  heroBanner: { flexDirection: 'row', backgroundColor: '#E6DFD3', marginHorizontal: 16, marginTop: 8, borderRadius: 24, height: 160, overflow: 'hidden', alignItems: 'center' },
+  heroBannerDesktop: { height: 280, marginTop: 32, borderRadius: 32 },
+  heroTextArea: { flex: 1, paddingLeft: 20, justifyContent: 'center', zIndex: 2 },
+  heroTitleText: { fontSize: 20, fontWeight: '800', color: '#1E1F20', lineHeight: 26 },
+  heroTitleTextDesktop: { fontSize: 38, lineHeight: 48 },
+  heroButton: { backgroundColor: '#A37854', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, marginTop: 12, alignSelf: 'flex-start' },
+  heroButtonText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
+  heroImage: { width: 140, height: '100%', position: 'absolute', right: 0, bottom: 0, opacity: 0.95 },
+  heroImageDesktop: { width: 350 },
+
+  muralTitle: { fontSize: 32, fontWeight: '800', color: '#1E1F20', textAlign: 'center', marginTop: 32, marginBottom: 12 },
+  vitrineContainer: { paddingHorizontal: 8 },
+  vitrineDesktop: { paddingHorizontal: 0, marginTop: 16 },
+
+  pillFilterContainer: { flexDirection: 'row', justifyContent: 'center', backgroundColor: '#FAF9F5', paddingHorizontal: 16, marginBottom: 20 },
+  pillItem: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1, borderColor: '#E5E2DA', backgroundColor: '#FFF', marginHorizontal: 4 },
+  pillItemActive: { backgroundColor: '#A37854', borderColor: '#A37854' },
+  pillText: { fontSize: 13, color: '#666', fontWeight: '600' },
+  pillTextActive: { color: '#FFF', fontWeight: 'bold' },
+
+  emptyContainer: { flex: 1, alignItems: 'center', marginTop: 40, paddingHorizontal: 24 },
+  emptyText: { color: '#8E8E93', fontSize: 14, textAlign: 'center' },
+
+  profileWrapper: { alignItems: 'center', padding: 32, marginTop: 20 },
+  avatarCircle: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#E6DFD3', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  avatarInitial: { fontSize: 32, color: '#A37854', fontWeight: 'bold' },
+  profileNameText: { fontSize: 22, fontWeight: 'bold', color: '#1E1F20' },
+  profileEmailText: { fontSize: 14, color: '#8E8E93', marginTop: 4 },
+  dividerLine: { width: '100%', height: 1, backgroundColor: '#E5E2DA', marginVertical: 24 },
+  
+  btnDangerOutline: { backgroundColor: '#FFF', borderWidth: 1.5, borderColor: '#FF4D4D', paddingVertical: 14, borderRadius: 14, width: '100%', alignItems: 'center', marginBottom: 12 },
+  btnDangerOutlineText: { color: '#FF4D4D', fontSize: 15, fontWeight: 'bold' },
+  btnDangerSolid: { backgroundColor: '#FF4D4D', paddingVertical: 14, borderRadius: 14, width: '100%', alignItems: 'center' },
+  btnDangerSolidText: { color: '#FFF', fontSize: 15, fontWeight: 'bold' },
+
+  tabNavContainer: { flexDirection: 'row', height: 65, backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#E5E2DA', justifyContent: 'space-around', alignItems: 'center', paddingBottom: 10, position: 'absolute', bottom: 0, left: 0, right: 0 },
+  tabNavItem: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  tabNavText: { fontSize: 13, color: '#8E8E93', fontWeight: '600' },
+  tabNavTextActive: { color: '#A37854', fontWeight: 'bold' }
 });
