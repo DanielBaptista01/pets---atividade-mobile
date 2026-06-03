@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Adotei",
-    "slug": "Adotei",
+    "name": "adotei",
+    "slug": "adotei-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/slogan_pet.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
