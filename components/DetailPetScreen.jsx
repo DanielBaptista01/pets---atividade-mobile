@@ -4,7 +4,7 @@ import { useUserRegister } from '../context/userContext';
 import { deletePet, updatePet } from '../services/petService';
 import { usePets } from '../context/petContext';
 
-export function DetailPetScreen({ pet, onGoBack }) {
+export function DetailPetScreen({ pet, onGoBack, fromMyPets }) {
   const { user } = useUserRegister();
   const { fetchPets } = usePets();
 
@@ -140,20 +140,16 @@ export function DetailPetScreen({ pet, onGoBack }) {
             <Text style={styles.storyText}>{pet.story || 'Sem descrição cadastrada.'}</Text>
 
             {/* BOTÕES DE AÇÃO DINÂMICOS */}
-            {!isOwner ? (
-              <TouchableOpacity style={styles.adoptButton} onPress={handleAdoptContact} activeOpacity={0.8}>
-                <Text style={styles.adoptButtonText}>💬 Quero Adotar (Chamar no WhatsApp)</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.ownerActions}>
-                <Text style={styles.ownerNotice}>⭐ Esse pet foi cadastrado por você</Text>
-                
-                <TouchableOpacity style={styles.editButton} onPress={() => setIsEditModalOpen(true)} activeOpacity={0.8}>
-                  <Text style={styles.editButtonText}>📝 Editar Informações</Text>
-                </TouchableOpacity>
+            {fromMyPets && (
+          <View style={styles.ownerActions}>
+           <Text style={styles.ownerNotice}>⭐ Esse pet foi cadastrado por você</Text>
+    
+           <TouchableOpacity style={styles.editButton} onPress={() => setIsEditModalOpen(true)} activeOpacity={0.8}>
+          <Text style={styles.editButtonText}>📝 Editar Informações</Text>
+          </TouchableOpacity>
 
-              </View>
-            )}
+      </View>
+     )}
           </View>
 
         </View>

@@ -95,7 +95,7 @@ function AppContent() {
   }
 
   if (selectedPet) {
-    return <DetailPetScreen pet={selectedPet} onGoBack={() => setSelectedPet(null)} />;
+    return <DetailPetScreen pet={selectedPet} onGoBack={() => setSelectedPet(null)} fromMyPets={filtroMural === 'meus'} />;
   }
 
   if (isCreatingPet) {
